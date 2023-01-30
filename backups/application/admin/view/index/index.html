@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户设置</title>
+    <script src="__CSS__/js/jquery.min.js"></script>
+    <script src="__CSS__/js/vue.js"></script>
+    <link rel="stylesheet" href="__CSS__/css/index.css">
+    <script src="__CSS__/js/index.js"></script>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body style="background: #efefef;"> 
+    <div id='app' >
+        <el-menu  class="el-menu-demo" :default-active="activeIndex2" mode="horizontal" >
+            <el-menu-item index="1">用户设置</el-menu-item>
+          </el-menu>
+               <div style="padding:10px;">
+                    <el-card class="box-card" style="margin-top: 20px;">
+                        <el-button type="primary" @click="UserAdd()" size="small">新增用户</el-button>
+                            <el-table
+                            :data="tableData"
+                            height="calc(100vh - 200px)"
+                            style="width: 100%">
+                            <el-table-column
+                            prop="username"
+                            label="角色名称"
+                            width="180">
+                            </el-table-column>
+                            <el-table-column label="操作">
+                                <template slot-scope="scope">
+                                <el-button
+                                    size="mini"
+                                    @click="UserUpdate(scope.row)">编辑</el-button>
+                                <el-button
+                                    size="mini"
+                                    type="danger"
+                                    @click="handleDelete(scope.row)">删除</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                </el-card>
+               </div>
+                    <!-- 新增编辑角色   -->
+                    <el-dialog
+                        :title="title"
+                        :visible.sync="dialogVisible"
+                        width="60%"
+                        >
+                        <el-input v-model="input" placeholder="请输入用户名称"></el-input>
+                        <span slot="footer" class="dialog-footer">
+                            <el-button type="primary" @click="sumbit()">确 定</el-button>
+                        </span>
+                    </el-dialog>
+          
+    </div>
+</body>
+<script>
+
+    var this_ =  new Vue({
+          el: '#app',
+          data() {
+               return {
+                activeIndex2:"1",
+                tableData:[],
+                dialogVisible:false,
+                title:"",
+                id:"",
+                input:"",
+                
+               }
+          },mounted:function(){     
+            this.UserList()  
+          },
+          methods: {
+            handleDelete(data){
+                            this.$confirm('是否确定删除改数据?', '提示', {
+                                confirmButtonText: '确定',
+                                cancelButtonText: '取消',
+                                type: 'warning'
+                                }).then(() => {
+                                    $.get("/User/UserDelete",{id:data.id},function(res){
+                                      if(res.code==200){
+                                          this_.UserList()
+                                          this_.$message({
+                                                message:res.msg,
+                                                type: 'success'
+                                                });
+                                            }
+                                    },'json'); 
+                                });
+                        },
+                        sumbit(){
+                            if(this.input==""){
+                                this.$message.error('用户名称不能为空');
+                                return false;
+                            }
+                            if(this.title=='新增'){
+                                $.post("/User/UserAdd",{data:this.input},function(res){
+                                       if(res.code==200){
+                                          this_.dialogVisible = false
+                                          this_.UserList()
+                                          this_.$message({
+                                                message:res.msg,
+                                                type: 'success'
+                                           });
+                                       }
+                                },'json'); 
+                            }
+                            if(this.title=='编辑'){
+                                $.post("/User/UserUpdate",{id:this.id,data:this.input},function(res){
+                                      if(res.code==200){
+                                          this_.dialogVisible = false
+                                          this_.UserList()
+                                          this_.$message({
+                                                message: res.msg,
+                                                type: 'success'
+                                           });
+                                           
+                                       }
+                                },'json'); 
+                            }
+                        },
+                        UserAdd(){
+                           this.title = "新增"
+                           this.dialogVisible = true
+                           this.input = ""
+                        },
+                        UserList(){
+                          $.get("/User/UserList",function(res){
+                                  this_.tableData = res.data;
+                          },'json');
+                        },
+                        UserUpdate(data){
+                            this.title = "编辑"
+                            this.dialogVisible = true
+                            this.id = data.id
+                            this.input = data.username
+                        },
+          }
+   })
+   </script>
+</html>

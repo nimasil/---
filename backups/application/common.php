@@ -10,3 +10,9 @@
 // +----------------------------------------------------------------------
 
 // 应用公共文件
+function resMsg($code=400, $msg="",$data=""){
+    $resmsg['code'] = $code;
+    $resmsg['msg'] = $msg;
+    $resmsg['data'] = $data;
+    return $resmsg;
+}

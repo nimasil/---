@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户设置</title>
+    <script src="__CSS__/js/jquery.min.js"></script>
+    <script src="__CSS__/js/vue.js"></script>
+    <link rel="stylesheet" href="__CSS__/css/index.css">
+    <script src="__CSS__/js/index.js"></script>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+        }
+        .day{
+            border:1px solid #aaaaaa;
+            width:20px;
+            height: 20px;
+        }
+        .DayTrue{
+            border:1px solid #aaaaaa;
+            width:20px;
+            height: 20px;
+            background: red;
+        }
+        .month{
+            width: 100%;
+            height: 30px;
+        }
+
+    </style>
+</head>
+<body> 
+    <div id='app' >
+         <div v-for="o in 12"  class="month">
+            <div style="float:left;">
+                {{o}} 月份 
+            </div> 
+             <div  style="float:left;margin-left:10px;">
+                <div v-for="i in list(o)"  style="float:left;">
+                         <div :class="DayStyle(o,i)">
+                         </div>
+                </div>
+             </div>
+         </div>
+    </div>
+</body>
+<script>
+
+    var this_ =  new Vue({
+          el: '#app',
+          data() {
+               return {
+                   datas:[],
+                   year:2023
+               }
+          },mounted:function(){     
+             this.DayLog();
+          },
+          methods: {
+            list(month){
+                 return new Date(this.year, month, 0).getDate()
+            },
+            DayStyle(month,day){
+                 if(day<10){
+                    day = '0'+day
+                 }
+                 if(month<10){
+                    month = '0'+month
+                 }
+                 var string = this.year+'-'+month+'-'+day
+                 if($.inArray(string,this.datas)>0){
+                    return "DayTrue"
+                 }
+                 return "day"
+            },
+            DayLog(){
+              $.post("/index/Backups/DayLog",function(res){
+                    this_.datas =res.data;
+              },'json');
+            }
+          }
+   })
+   </script>
+</html>

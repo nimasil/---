@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户设置</title>
+    <script src="__CSS__/js/jquery.min.js"></script>
+    <script src="__CSS__/js/vue.js"></script>
+    <link rel="stylesheet" href="__CSS__/css/index.css">
+    <script src="__CSS__/js/index.js"></script>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+        }
+        .day{
+            border:1px solid #aaaaaa;
+            width:30px;
+            height: 20px;
+            text-align: center;
+            line-height:20px;
+            font-size:10px;
+        }
+        .DayTrue{
+            border:1px solid #67c23a;
+            width:30px;
+            height:20px;
+            background: #67c23a;
+            color: #67c23a;
+            font-size:10px;
+        }
+        .day1{
+            
+            width:2.5px;
+            height:20px;
+            text-align: center;
+            line-height:20px;
+            font-size:10px;
+            background: #efefef;
+        }
+        .DayTrue1{
+            width:2.5px;
+            height:20px;
+            background: #67c23a;
+            color: #67c23a;
+            font-size:10px;
+        }
+        .month{
+            width: 100%;
+            height: 30px;
+        }
+        .month1{
+            float:left;
+            border-right:1px solid #aaaaaa;
+            border-top:1px solid #aaaaaa;
+            border-bottom:1px solid #aaaaaa;
+        }
+        .month1:nth-child(1){
+            border-left:1px solid #aaaaaa;
+        }
+    </style>
+</head>
+<body style="background: #efefef;"> 
+    <div id='app' >
+        <el-menu  class="el-menu-demo" :default-active="activeIndex2" mode="horizontal" >
+            <el-menu-item index="1">设备设置</el-menu-item>
+          </el-menu>
+               <div style="padding:10px;">
+                    <el-card class="box-card" style="margin-top: 20px;">
+                        <el-input style="width:300px;" @change="BackupsList()" v-model="where" placeholder="请输入查询内容"></el-input>
+                        <el-button type="primary" @click="BackupsAdd()">新增设备</el-button>
+                            <el-table
+                            :data="tableData"
+                            height="calc(100vh - 200px)"
+                            style="width: 100%">
+                            <el-table-column
+                            prop="device_code"
+                            label="设备编号"
+                           >
+                            </el-table-column>
+                            <el-table-column
+                            prop="system_code"
+                            label="系统编号"
+                           >
+                            </el-table-column>
+                            <el-table-column
+                            prop="software_code"
+                            label="软件编号"
+                           >
+                            </el-table-column>
+                            <el-table-column
+                            prop="device_name"
+                            label="设备名称"
+                           >
+                            </el-table-column>
+                            <el-table-column
+                            prop="system_name"
+                            label="系统名称"
+                           >
+                            </el-table-column>     
+                            <!-- <el-table-column
+                            prop="file_url"
+                            label="备份路径"
+                           >
+                            </el-table-column> -->
+                            <el-table-column label="操作" width="250"  fixed="right">
+                                <template slot-scope="scope">
+                                    <el-button
+                                    size="mini"
+                                    type="primary"
+                                    @click="BackupsLog(scope.row)">备份记录</el-button>
+                                <el-button
+                                    size="mini"
+                                    @click="BackupsUpdate(scope.row)">编辑</el-button>
+                                <el-button
+                                    size="mini"
+                                    type="danger"
+                                    @click="handleDelete(scope.row)">删除</el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                </el-card>
+               </div>
+                    <!-- 新增编辑设备   -->
+                    <el-dialog
+                        :title="title"
+                        :visible.sync="dialogVisible"
+                        width="60%"
+                        >
+                        <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+                            <el-form-item label="设备名称" prop="device_name">
+                              <el-input v-model="ruleForm.device_name"></el-input>
+                            </el-form-item>
+                            <el-form-item label="设备编号" prop="device_code">
+                                <el-input v-model="ruleForm.device_code"></el-input>
+                            </el-form-item>
+                            <el-form-item label="系统编号" prop="system_code">
+                                <el-input v-model="ruleForm.system_code"></el-input>
+                            </el-form-item>
+                            <el-form-item label="系统名称" prop="system_name">
+                                <el-input v-model="ruleForm.system_name"></el-input>
+                            </el-form-item>
+                            <el-form-item label="软件编号" prop="software_code">
+                                <el-input v-model="ruleForm.software_code"></el-input>
+                            </el-form-item>
+                            <!-- <el-form-item label="备份路径" prop="file_url">
+                                <el-input v-model="ruleForm.file_url"></el-input>
+                            </el-form-item> -->
+                          </el-form>
+                        <span slot="footer"  class="dialog-footer">
+                            <el-button type="primary" @click="sumbit()">确 定</el-button>
+                        </span>
+                    </el-dialog>
+                     <!-- 新增设备备份记录   -->
+                     <el-dialog
+                     :title="LogTitle"
+                     :visible.sync="LogVisible"
+                     width="1100px"
+                     >
+                     <el-tabs type="border-card">
+                        <el-tab-pane label="新增备份记录">
+                            <el-form :model="LogForm" :rules="rulesLog" ref="LogForm" label-width="100px" class="demo-ruleForm">
+                                <el-form-item label="计划内备份" prop="staus">
+                                    <el-radio-group v-model="LogForm.staus">
+                                      <el-radio label="是"></el-radio>
+                                      <el-radio label="否"></el-radio>
+                                    </el-radio-group>
+                                </el-form-item>
+                                <el-form-item label="备份类型" prop="type">
+                                    <el-radio-group v-model="LogForm.type">
+                                      <el-radio label="完备"></el-radio>
+                                      <el-radio label="差异"></el-radio>
+                                      <el-radio label="增量"></el-radio>
+                                    </el-radio-group>
+                                </el-form-item>
+        
+                                <el-form-item label="备份日期" prop="time">
+                                    <el-date-picker
+                                    v-model="LogForm.time"
+                                    type="daterange"
+                                    value-format="yyyy-MM-dd"
+                                    range-separator="至"
+                                    start-placeholder="开始日期"
+                                    end-placeholder="结束日期">
+                                  </el-date-picker>
+                                </el-form-item>
+
+                                <el-form-item label="备份路径" prop="file_url">
+                                    <el-input v-model="LogForm.file_url"></el-input>
+                                </el-form-item>
+
+                                <el-form-item label="备注">
+                                    <el-input type="textarea" v-model="LogForm.text"></el-input>
+                                </el-form-item>
+        
+                                </el-form>
+                                <el-button type="primary" @click="SumbitLog()">确 定</el-button>
+                        </el-tab-pane>
+                       <el-tab-pane label="记录列表">
+                                <el-table
+                                :data="LogData"
+                                height="calc(100vh - 450px)"
+                                style="width: 100%">
+                                <el-table-column
+                                prop="staus"
+                                label="计划内备份"
+                            >
+                                </el-table-column>
+                                <el-table-column
+                                prop="type"
+                                label="备份类型"
+                            >
+                                </el-table-column>
+                                <el-table-column width="250" label="备份时间">
+                                    <template slot-scope="scope">
+                                        <span>{{scope.row.start_time}}</span>  - 
+                                        <span>{{scope.row.end_time}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                prop="file_url"
+                                label="备份路径"
+                            >
+                                </el-table-column>
+                                <el-table-column
+                                prop="username"
+                                label="操作人"
+                            >
+                                </el-table-column>
+                                <el-table-column
+                                prop="text"
+                                label="备注"
+                            >
+                                </el-table-column>
+                                <el-table-column label="操作"   fixed="right">
+                                    <template slot-scope="scope">
+                                    <el-button
+                                        size="mini"
+                                        type="danger"
+                                        v-if="scope.row.username=='{$username}'"
+                                        @click="LogDelete(scope.row)">删除</el-button>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-tab-pane>
+                        <el-tab-pane label="备份统计">
+
+                            <div class="block">
+                                <el-date-picker
+                                  v-model="year"
+                                  type="year"
+                                  value-format="yyyy"
+                                  placeholder="选择年">
+                                </el-date-picker>
+                                <div style="float:right;">
+                                    <el-radio-group v-model="labelPosition" size="small">
+                                        <el-radio-button label="日">日</el-radio-button>
+                                        <el-radio-button label="月">月</el-radio-button>
+                                      </el-radio-group>
+                                 </div>
+                              </div>
+                              <div style="margin-top:10px">
+                                <div v-for="o in 12"  v-if="year!='' && labelPosition=='日'" class="month">
+                                    <div style="float:left;">
+                                        {{o}} 月
+                                    </div> 
+                                     <div  style="float:left;margin-left:10px;">
+                                        <div v-for="i in list(o)"  style="float:left;">
+                                                 <div :class="DayStyle(o,i)">
+                                                      {{i}}
+                                                 </div>
+                                        </div>
+                                     </div>
+                                 </div>
+
+                                 <div v-for="o in 12"  v-if="year!='' && labelPosition=='月'" class="month1">
+                                       
+                                        <div v-for="i in list(o)"  style="float:left;">
+                                                 <div :class="DayStyle(o,i,1)">
+                                                    
+                                                 </div>
+                                        </div>
+                                     
+                                 </div>
+
+                              </div>
+
+                        </el-tab-pane>
+                       
+                     </el-tabs>
+
+                    
+                 </el-dialog>
+    </div>
+</body>
+<script>
+
+    var this_ =  new Vue({
+          el: '#app',
+          data() {
+               return {
+                activeIndex2:"1",
+                tableData:[],
+                dialogVisible:false,
+                title:"",
+                LogTitle:"备份记录",
+                LogVisible:false,
+                year:'2023',
+                labelPosition:"日",
+                id:"",
+                LogData:[],
+                where:"",
+                ruleForm: {
+                    device_name: '',
+                    device_code:"",
+                    system_code:"",
+                    system_name:"",
+                    software_code:"",
+                },
+                LogForm:{
+                    d_id:0,
+                    type:"",
+                    staus:"是",
+                    time:"",
+                    username:"{$username}",
+                    file_url:"",
+                    text:""
+                },
+                rulesLog:{
+                    staus: [
+                        { required: true, message: '计划内备份不能为空', trigger: 'change' }
+                    ],
+                    type: [
+                        { required: true, message: '备份类型不能为空', trigger: 'change' }
+                    ],
+                    time: [
+                        { required: true, message: '备份日期不能为空', trigger: 'change' }
+                    ],
+                    file_url: [
+                        { required: true, message: '备份路径不能为空', trigger: 'change' }
+                    ],
+                },
+                rules: {
+                  
+                    device_name: [
+                        { required: true, message: '设备名称不能为空', trigger: 'change' }
+                    ],
+                    device_code: [
+                        { required: true, message: '设备编号不能为空', trigger: 'change' }
+                    ],
+                    system_code: [
+                        { required: true, message: '系统编号不能为空', trigger: 'change' }
+                    ],
+                    system_name: [
+                        { required: true, message: '系统名称不能为空', trigger: 'change' }
+                    ],
+                    software_code: [
+                        { required: true, message: '软件编号不能为空', trigger: 'change' }
+                    ],
+                 },
+                 datas:[]
+                            
+               }
+          },mounted:function(){     
+            this.BackupsList()  
+          },
+          methods: {
+            BackupsLog(data){ 
+                    this.LogVisible = true;    
+                    this.LogForm.d_id = data.id   
+                    this.BackupsLogList()
+                    this.DayLog()
+            },
+            list(month){
+                 return new Date(this.year, month, 0).getDate()
+            },
+            DayStyle(month,day,type=0){
+                 if(day<10){
+                    day = '0'+day
+                 }
+                 if(month<10){
+                    month = '0'+month
+                 }
+                 var string = this.year+'-'+month+'-'+day
+                 if($.inArray(string,this.datas)>-1){
+                    if(type==1){
+                        return "DayTrue1" 
+                    }
+                    return "DayTrue"
+                 }
+                 if(type==1){
+                    return "day1"
+                 }
+                 return "day"
+            },
+            DayLog(){
+              $.get("/Backups/DayLog",{id:this.LogForm.d_id},function(res){
+                    this_.datas =res.data;
+              },'json');
+            },
+            LogDelete(data){
+                this.$confirm('是否确定删除该数据?', '提示', {
+                                confirmButtonText: '确定',
+                                cancelButtonText: '取消',
+                                type: 'warning'
+                                }).then(() => {
+                                    $.get("/Backups/LogDelete",{id:data.id},function(res){
+                                      if(res.code==200){
+                                          this_.BackupsLogList()
+                                          this_.$message({
+                                                message:res.msg,
+                                                type: 'success'
+                                                });
+                                            }else{
+                                                this_.$message.error(res.msg);
+                                            }
+                                    },'json'); 
+                                });
+            },
+            SumbitLog(){
+                this.$refs['LogForm'].validate((valid) => {
+                     if (valid) {
+                        $.post("/Backups/BackupsLog",{data:this.LogForm},function(res){
+                                                if(res.code==200){
+                                                    this_.BackupsLogList()
+                                                    this_.$message({
+                                                            message:res.msg,
+                                                            type: 'success'
+                                                    });
+                                                    this_.LogForm.time = ""
+                                                    this_.LogForm.type=""
+                                                    this_.LogForm.file_url = ""
+                                                    this_.LogForm.text = ""
+                                                }else{
+                                                this_.$message.error(res.msg);
+                                            }
+                         },'json'); 
+                     }
+                 })
+            },
+            BackupsLogList(){
+                $.get("/Backups/BackupsLogList",{id:this.LogForm.d_id},function(res){
+                                  this_.LogData = res.data;
+                },'json');
+            },
+            handleDelete(data){
+                            this.$confirm('是否确定删除该数据?', '提示', {
+                                confirmButtonText: '确定',
+                                cancelButtonText: '取消',
+                                type: 'warning'
+                                }).then(() => {
+                                    $.get("/Backups/BackupsDelete",{id:data.id},function(res){
+                                      if(res.code==200){
+                                          this_.BackupsList()
+                                          this_.$message({
+                                                message:res.msg,
+                                                type: 'success'
+                                                });
+                                            }else{
+                                                this_.$message.error(res.msg);
+                                            }
+                                    },'json'); 
+                                });
+                        },
+                        sumbit(){
+                            this.$refs['ruleForm'].validate((valid) => {
+                                    if (valid) {
+                                        if(this.title=='新增'){
+                                            $.post("/Backups/BackupsAdd",{data:this.ruleForm},function(res){
+                                                if(res.code==200){
+                                                    this_.dialogVisible = false
+                                                    this_.BackupsList()
+                                                    this_.$message({
+                                                            message:res.msg,
+                                                            type: 'success'
+                                                    });
+                                                }else{
+                                                this_.$message.error(res.msg);
+                                            }
+                                            },'json'); 
+                                        }
+                                        if(this.title=='编辑'){
+                                            $.post("/Backups/BackupsUpdate",{id:this.id,data:this.ruleForm},function(res){
+                                                if(res.code==200){
+                                                    this_.dialogVisible = false
+                                                    this_.BackupsList()
+                                                    this_.$message({
+                                                            message: res.msg,
+                                                            type: 'success'
+                                                    });
+                                                    
+                                                }else{
+                                                this_.$message.error(res.msg);
+                                            }
+                                            },'json'); 
+                                        }
+                                    }
+                                });
+
+
+                        
+                        },
+                        BackupsAdd(){
+                           this.title = "新增"
+                           this.dialogVisible = true
+                           var ruleForm = {
+                                device_name: '',
+                                device_code:"",
+                                system_code:"",
+                                system_name:"",
+                                software_code:"",
+                                file_url:""
+                            }
+                            this_.ruleForm = ruleForm
+                        },
+                        BackupsList(){
+                          $.get("/Backups/BackupsList",{where:this.where},function(res){
+                                  this_.tableData = res.data;
+                          },'json');
+                        },
+                        BackupsUpdate(data){
+                            this.title = "编辑"
+                            this.dialogVisible = true
+                            this.id = data.id
+                            var ruleForm = {
+                                device_name:data.device_name,
+                                device_code:data.device_code,
+                                system_code:data.system_code,
+                                system_name:data.system_name,
+                                software_code:data.software_code,
+                                file_url:data.file_url,
+                            }
+                           this_.ruleForm = ruleForm
+                        },
+
+          }
+   })
+   </script>
+</html>
